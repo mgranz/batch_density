@@ -1,4 +1,21 @@
-def batch_density(
+@torch.jit.script
+def linspace(start: torch.Tensor, stop: torch.Tensor, num: int):
+    """
+    Creates a tensor of shape [num, *start.shape] whose values are evenly spaced from start to end, inclusive.
+    Replicates but the multi-dimensional behaviour of numpy.linspace in PyTorch.
+    Source: https://github.com/pytorch/pytorch/issues/61292
+    """
+    # create a tensor of 'num' steps from 0 to 1
+    steps = torch.arange(num, dtype=torch.float32, device=start.device) / (num - 1)
+
+    for i in range(start.ndim):
+        steps = steps.unsqueeze(-1)
+
+    # the output starts at 'start' and increments until 'stop' in each dimension
+    out = start[None] + steps * (stop - start)[None]
+    return out
+    
+def multidim_density(
     samples: torch.Tensor,
     n_bins: int = 100,
     density: torch.Tensor = None,
